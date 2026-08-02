@@ -68,6 +68,32 @@ export CROSS_COMPILE=arm-linux-gnueabi-
 make ARCH=arm socfpga_defconfig
 ```
 
+# תיקון שגיאות קוד, קימפול הליבה והעתקה לכרטיס הזיכרון
+
+[🔙 חזרה לתוכן העניינים של הלינוקס](../README.md)
+
+לאחר שהגדרנו את תצורת הלינוקס (Menuconfig), עלינו לפתור מספר באגים בקוד המקור של Altera כדי שהקומפילציה תעבור בהצלחה. במדריך זה נבצע תיקון אוטומטי לקבצי המקור, נקמפל את ליבת המערכת ואת עץ ההתקנים (Device Tree), ונעביר את הקבצים המוכנים ישירות למחיצת ה-FAT בכרטיס ה-SD שלנו.
+
+---
+
+## 🛠️ שלב ראשון: תיקון אוטומטי של שגיאות הקוד
+
+בגרסה הנוכחית של הלינוקס ישנם שני קבצים שגורמים לשגיאות קימפול:
+1. דרייבר המסך של Newhaven (החסר במערכת).
+2. משתנה `FBINFO_FLAG_DEFAULT` בדרייבר הווידאו של Altera שכבר אינו נתמך.
+
+כדי לתקן אותם במהירות וללא צורך בעריכה ידנית, נוודא שאנחנו בתוך תיקיית המקור של הלינוקס (`linux-socfpga`) ונריץ את פקודות ה-`sed` הבאות:
+
+```bash
+# ביטול הדרייבר של Newhaven ב-Makefile
+sed -i 's/obj-$(CONFIG_NEWHAVEN_LCD)/# obj-$(CONFIG_NEWHAVEN_LCD)/g' drivers/tty/Makefile
+
+# איפוס דגל הווידאו השגוי בקובץ ה-C של Altera VIP
+sed -i 's/info->flags = FBINFO_FLAG_DEFAULT;/info->flags = 0;/g' drivers/video/fbdev/altvipfb2.c
+
+
+
+
 כעת נפתח את ממשק ההגדרות הגרפי (Menuconfig):
 
 ```bash
